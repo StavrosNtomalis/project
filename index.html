@@ -194,68 +194,69 @@
             // Συμπλήρωσε τις υπόλοιπες ημέρες
         };
 
-        const startDateKey = 'calendarStartDate';
-        let startDate = localStorage.getItem(startDateKey);
+    const startDateKey = 'calendarStartDate';
+    let startDate = localStorage.getItem(startDateKey);
 
-        if (!startDate) {
-            startDate = new Date().toISOString();
-            localStorage.setItem(startDateKey, startDate);
-        }
+    if (!startDate) {
+        startDate = new Date().toISOString();
+        localStorage.setItem(startDateKey, startDate);
+    }
 
-        const startDateTime = new Date(startDate).getTime();
-        const today = new Date();
-        const todayTime = today.getTime();
-        const daysPassed = Math.floor((todayTime - startDateTime) / (1000 * 60 * 60 * 24));
-        const unlockedDays = Math.min(daysPassed + 31, daysCount);
+    const startDateTime = new Date(startDate).getTime();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Μηδενισμός της ώρας για ακρίβεια στη σύγκριση
+    const todayTime = today.getTime();
+    const daysPassed = Math.floor((todayTime - startDateTime) / (1000 * 60 * 60 * 24));
+    const unlockedDays = Math.min(daysPassed + 1, daysCount); // +1 για να ξεκινάει από την τρέχουσα ημέρα
 
-        for (let i = 1; i <= daysCount; i++) {
-            const day = document.createElement('div');
-            day.classList.add('day');
-            day.innerText = i;
+    for (let i = 1; i <= daysCount; i++) {
+        const day = document.createElement('div');
+        day.classList.add('day');
+        day.innerText = i;
 
-            if (i <= unlockedDays) {
-                day.classList.add('unlocked');
-                day.addEventListener('click', () => {
-                    const dayContent = content[i];
-                    modalContent.innerHTML = '';
+        if (i <= unlockedDays) {
+            day.classList.add('unlocked');
+            day.addEventListener('click', () => {
+                const dayContent = content[i];
+                modalContent.innerHTML = '';
 
-                    if (dayContent) {
-                        if (dayContent.text) modalContent.innerHTML += `<p><i>${dayContent.text}</i></p>`;
-                        if (dayContent.image) modalContent.innerHTML += `<img src="${dayContent.image}" alt="Day ${i} image">`;
-                        if (dayContent.song) modalContent.innerHTML += `<a style="color: pink; text-decoration: none;" href="${dayContent.song}" target="_blank">Άκουσε το τραγούδι</a>`;
-                        if (dayContent.video) {
-                            modalContent.innerHTML += `
-                                 <video width="560" height="315" controls>
+                if (dayContent) {
+                    if (dayContent.text) modalContent.innerHTML += `<p><i>${dayContent.text}</i></p>`;
+                    if (dayContent.image) modalContent.innerHTML += `<img src="${dayContent.image}" alt="Day ${i} image">`;
+                    if (dayContent.song) modalContent.innerHTML += `<a style="color: pink; text-decoration: none;" href="${dayContent.song}" target="_blank">Άκουσε το τραγούδι</a>`;
+                    if (dayContent.video) {
+                        modalContent.innerHTML += `
+                            <video width="560" height="315" controls>
                                 <source src="${dayContent.video}" type="video/mp4">
                                 Το πρόγραμμα περιήγησης σας δεν υποστηρίζει βίντεο.
-                                </video>`;
-                        }
-                    } else {
-                        modalContent.innerHTML = `<p>Δεν υπάρχει περιεχόμενο για αυτή την ημέρα.</p>`;
+                            </video>`;
                     }
+                } else {
+                    modalContent.innerHTML = `<p>Δεν υπάρχει περιεχόμενο για αυτή την ημέρα.</p>`;
+                }
 
-                    modal.classList.add('open');
-                    overlay.classList.add('open');
-                });
-            } else {
-                day.classList.add('locked');
-                day.addEventListener('click', () => {
-                    alert('Μην βιάζεσαι! Πρέπει να κάνεις υπομονή να έρθει η επόμενη μερα !!');
-                });
-            }
-
-            calendar.appendChild(day);
+                modal.classList.add('open');
+                overlay.classList.add('open');
+            });
+        } else {
+            day.classList.add('locked');
+            day.addEventListener('click', () => {
+                alert('Μην βιάζεσαι! Πρέπει να κάνεις υπομονή να έρθει η επόμενη μέρα!');
+            });
         }
 
-        overlay.addEventListener('click', () => {
-            modal.classList.remove('open');
-            overlay.classList.remove('open');
-        });
+        calendar.appendChild(day);
+    }
 
-        closeModal.addEventListener('click', () => {
-            modal.classList.remove('open');
-            overlay.classList.remove('open');
-        });
+    overlay.addEventListener('click', () => {
+        modal.classList.remove('open');
+        overlay.classList.remove('open');
+    });
+
+    closeModal.addEventListener('click', () => {
+        modal.classList.remove('open');
+        overlay.classList.remove('open');
+    });
     </script>
 </body>
 
