@@ -207,7 +207,8 @@
     today.setHours(0, 0, 0, 0); // Μηδενισμός της ώρας για ακρίβεια στη σύγκριση
     const todayTime = today.getTime();
     const daysPassed = Math.floor((todayTime - startDateTime) / (1000 * 60 * 60 * 24));
-    const unlockedDays = Math.min(daysPassed + 1, daysCount); // +1 για να ξεκινάει από την τρέχουσα ημέρα
+    const unlockedDays = Math.max(1, Math.min(daysPassed + 1, daysCount)); // Τουλάχιστον 1 ημέρα ξεκλειδωμένη
+
 
     for (let i = 1; i <= daysCount; i++) {
         const day = document.createElement('div');
