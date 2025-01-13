@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Calendar</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: url("https://thumbs.dreamstime.com/b/%CF%81%CE%BF%CE%B6-%CF%86%CF%8C%CE%BD%CF%84%CE%BF-%CE%BA%CE%B1%CF%81%CE%B4%CE%B9%CE%AD%CF%82-%CF%83%CE%B5-%CE%BA%CE%B1%CF%81%CE%B4%CE%B9%CE%B1%CE%BA%CE%AD%CF%82-%CF%83%CF%86%CE%B1%CE%AF%CF%81%CE%B5%CF%82-%CE%B5%CF%80%CE%AF%CF%80%CE%B5%CE%B4%CE%BF-%CF%83%CF%84%CF%85%CE%BB-%CE%B5%CF%80%CE%AC%CE%BD%CF%89-%CF%8C%CF%88%CE%B7-%CE%B3%CE%BB%CF%85%CE%BA%CF%8C-160098405.jpg");
+            background-repeat: no-repeat;
+            background-size: cover;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            margin: 20px 0;
+            color: #333;
+            text-align: center;
+
+        }
+
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            gap: 15px;
+            justify-content: center;
+            max-width: 90%;
+            padding: 20px;
+        }
+
+        .day {
+            width: 60px;
+            height: 60px;
+            background-color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 60px;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .day.locked {
+            background-color: #ddd;
+            cursor: not-allowed;
+            position: relative;
+        }
+
+        .day.locked::after {
+            content: '🔒';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+            color: #777;
+        }
+
+        .day.unlocked:hover {
+            transform: scale(1.1);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            text-align: center;
+            max-width: 90%;
+        }
+
+        .modal img {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .modal button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: pink;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .modal button:hover {
+            background-color: pink;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .modal.open,
+        .overlay.open {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 style="padding: 10px 20px; color: white; text-align: center;">"Μια Μοναδική Διαδρομή με Μικρές Ανακαλύψεις"</h1>
+    <p style="padding: 10px 20px; color: white; text-align: center;"><b>
+            <!-- Καλώς ήρθες σε ένα ημερολόγιο γεμάτο εκπλήξεις!
+            Κάθε
+            μέρα σου επιφυλάσσει
+            κάτι
+            ξεχωριστό—μια ανάμνηση, ένα
+            τραγούδι, μια φωτογραφία που μοιραστήκαμε ή ένα μήνυμα που θέλω να σου αφήσω. Μια μικρή στιγμή για να
+            θυμηθούμε
+            όλα
+            όσα μας έφεραν εδώ. Ανακάλυψε την κάθε μέρα με ανυπομονησία! -->
+
+
+            Αυτό το ημερολόγιο είναι το ταξίδι μας, γραμμένο με κάθε στιγμή που μοιραστήκαμε. Κάθε
+            μέρα σου επιφυλάσσει
+            κάτι
+            ξεχωριστό - μερικές φωτογραφίες, τραγούδια, γέλια, κείμενα που αποτυπώνουν τα συναισθήματα και τις σκέψεις
+            μου για εσένα. Κάθε ημέρα είναι γεμάτη από την αγάπη που νιώθω και τις στιγμές που πάντα θα θυμάμαι.
+            Ανακάλυψε την κάθε μέρα με ανυπομονησία! Σαγαπάω πολύ και σε σκέφτομαι μονίμως..
+            <br>Ευχαριστώ για τις στιγμές που πέρασα μαζι σου..
+        </b></p>
+    <div style="margin-bottom: 100px;" class="calendar" id="calendar"></div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="modal" id="modal">
+        <div id="modalContent"></div>
+        <button id="closeModal">Κλείσιμο</button>
+    </div>
+
+    <script>
+        const daysCount = 31;
+        const calendar = document.getElementById('calendar');
+        const overlay = document.getElementById('overlay');
+        const modal = document.getElementById('modal');
+        const modalContent = document.getElementById('modalContent');
+        const closeModal = document.getElementById('closeModal');
+
+        // Περιεχόμενο για τις ημέρες
+        const content = {
+            1: { text: 'Θυμάμαι πώς ξεκίνησαν όλα πριν από τρία χρόνια. Δεν ήξερα αν ήσουν με κάποιον ή αν υπήρχε κάτι άλλο στη ζωή σου, αλλά υπήρξε κάτι μέσα μου που με ώθησε να κάνω την πρώτη κίνηση. Δεν περίμενα τίποτα συγκεκριμένο εκείνη την στιγμή, απλά ήθελα να σε γνωρίσω καλύτερα. Τώρα, κοιτάζοντας πίσω, συνειδητοποιώ πόσο χαίρομαι που το έκανα και πόσο υπέροχα ήταν αυτα τα χρόνια που περάσαμε μαζί. Ελπίζω να απολαύσεις την συνέχεια μωρό μου...' },
+            2: { text: 'Αυτή ήταν απο τις πρώτες φορές που σε είχα πετύχει έξω..', image: "images/IMG_4237.PNG", song: null },
+            3: { text: 'Οι πρώτες φορές μας στο γραφείο... Αυτό ήταν το πρώτο στόρυ μας στενούς.', image: null, song: null, video: "images/a0920770923d4f879732e2b4b642334a.MOV" },
+            4: { text: 'Νομίζω ήρθε η ώρα να σ αφιερώσω ένα τραγούδι... Ε τι λες καί εσύ ?', image: null, song: 'https://open.spotify.com/track/4wkdq4fAPi5r9S3usH1Xgj?si=3bcab4d4649a43f0' },
+            5: {
+                text: 'Η σημερινή μέρα δεν έχει κάποια ανάμνηση ωστώσο θέλω να σου πω πως το χαμόγελό σου φώτιζε και φωτίζει τον κόσμο μου ακόμα και σήμερα ❤️!', image: null, song: null
+            },
+            6: { text: 'Με είχες πρήξει να κάνουμε μποτέ...', image: 'images/IMG_6701 2.PNG', song: null },
+            7: { text: 'Από τις ημέρες που ερχόμουν σπίτι σου για να διαβάσουμε αλλά μόνο διάβασμα δεν κάναμε... Παρεπιπτώντος είναι απο τιςε αγαπημένες μου φωτογραφίες γιατί και οι δύο μας χαμογελάμε..', image: 'images/IMG_4346.PNG', song: null },
+            8: { text: 'To θυμάσαι..; Σ είχε αρέσει πολύ τότε', image: 'images/A369938B-EF4E-434E-B105-0CED0D8A6A36.JPG', song: null },
+            9: { text: 'Το αγαπημένο μου μπάνιο μαζί σου..', image: 'images/colaz.jpg', song: null },
+            10: { text: 'Σαγαπάω πολύ ακομα... ', image: null, song: 'https://open.spotify.com/track/0jYj7lrv6CxOD6GENVSYcB?si=0b9242bd1a2944c9' },
+            11: { text: 'Κάθε μέρα που περνάει, σκέφτομαι πόσο όμορφα ήταν μαζί σου.', image: null, song: null },
+            12: { text: 'Δεν έχω ξεχάσει ακόμα την πρώτη μας εκδρομή στην Αθήνα... Το προωπό σου έλαμπε εκείνη την μέρα', image: 'images/pixiz-13-01-2025-16_41_03.jpg', song: null },
+            13: { text: 'Μια φωτογραφία που δεν έχει κατι το ιδιαίτερο.. Παρόλα αυτα για μένα είναι από τις αγαπημένες μου γιατι χαμογελάς διπλα μου. Μου έχει λείψει να απολαμβανω το χαμόγελο αυτο κάθε μερα και να είναι δικό μου.. ', image: 'images/IMG_6454.png', song: null },
+            14: { text: 'Το πρώτο μας μπάνιο στην θάλασσα', image: null, song: null, video: 'images/recorded-916097405274.MP4' },
+            15: { text: 'Ημέρα αφιέρωσης.. Σε σκέφτομαι πολυυυυυυυυυ❤️', image: null, song: 'https://open.spotify.com/track/0GfGce8HEFPFWolEqz36rL?si=59bcfb5d92b549d3' },
+            16: { text: 'Απο τα αγαπηένα γενέθλια της ζωής μου.. Και μαλιστα θυμάμαι το επόμενο πρωί είχες έρθει σπίτι μου να μ κάνεις έκπληξη.', image: 'images/IMG_7891.png', song: null },
+            17: { text: 'Μια απο τις πολλές όμορφες ημέρες σπίτι σου...', image: 'images/IMG_4602.png', song: null },
+            18: { text: 'Πάντα χαμογελούσα όταν σου αγόραζα λουλούδια γιατί κάθε φόρα ήξερα οτι θα έβλεπα το προσωπό σου να χαμογελάει..', image: 'images/IMG_4520.png', song: null },
+            19: { text: 'Τα βράδια μαζί σου ήταν πάντα κατι που ανυπομονούσα να έρθει', image: 'images/pixiz-13-01-2025-17-21-59.jpg', song: null },
+            20: { text: 'Σε κάθε τραγούδι που ακούω, βρίσκω ένα κομμάτι από εμάς και σε σκέφτομαι.. 🎵', image: null, song: null },
+            21: { text: 'Είμαι ακόμα ερωτευμένος μαζί σου..', image: null, song: 'https://open.spotify.com/track/2V2sPEGKCyNd1KmtzR1KJa?si=86ed8b13e2364264' },
+            22: { text: 'Η ημέρα που κλείσαμε ένα χρόνο.. Η συνέχεια στο γραφείο ήταν υπέροχη, γραμματέα μου...', image: 'images/IMG_5477.JPG', song: null },
+            23: { text: 'Καλά εδώ είναι απο τις φορές που νόμιζες οτι είσαι πιο δυναατή απο εμένα. Χαζό μου..', image: 'images/IMG_4560.png', song: null },
+            24: { text: 'Χαχαχαχαχα εδώ σ μάθαινα μπάσκετ.. Θύμαμαι είχαμε πάει και στον πάνω όροφο και σε είχα βάλει σε ένα παράθυρο και φιλόμασταν. Εσύ κλασικά φοβόσουν μην μας δουν..', image: 'images/IMG_4582.JPG', song: null },
+            25: { text: 'Κάθε μέρα, βρίσκω έναν λόγο να σκέφτομαι εσένα...', image: null, song: null },
+            26: { text: 'Μου λείπεις πολυ.. σε θέλω πίσω', image: null, song: 'https://open.spotify.com/track/431GUPxkKxF3BPbr6ujoYv?si=58fb10a2552846c9' },
+            27: { text: 'Χαμογελάρα μου ', image: 'images/IMG_4720.png', song: null },
+            28: { text: 'Τα μάτια σου είναι απο τα αγαπημένα μου μέρη πάνω σου...', image: 'images/933F5895-078A-44D6-B4A9-D845F71660B9.JPG', song: null },
+            29: { text: 'Νομίζω δείχνει το πάθος που είχα για σένα..', image: 'images/IMG_1618.png', song: null },
+            30: { text: 'Εννοιείται πως οι στιγμες αυτές δεν αντιπροσωπεύουν όσα όλα έχουμε ζήσει μαζί αλλά σαγαπώ πολύ και θέλω να ξέρεις οτι σε αγαπάω ακόμα.. Για αυτό και έκατσα και έκανα όλο αυτό εδώ... Σε σκέφτομαι πολύ ❤️ ❤️', image: null, song: null },
+            31: { text: 'Βοηθησέ με να συνεχίσω να προσθέτω στο ημερολόγιο νέες φωτογραφίες μας, νέες στιγμές, νέες εμπειρίες. Γιατί κάθε μέρα που περνά, συνειδητοποιώ πόσο πολύ σε θελω και ποσο θέλω να δημιουργήσουμε μαζι νεές στιγμές στιγμές.', image: 'images/IMG_AD6E9FE22F31-1.jpeg', song: 'https://open.spotify.com/track/7vVG2ce07mF7tblGgvlE3B?si=34f36715ab934a62' },
+            // Συμπλήρωσε τις υπόλοιπες ημέρες
+        };
+
+        const startDateKey = 'calendarStartDate';
+        let startDate = localStorage.getItem(startDateKey);
+
+        if (!startDate) {
+            startDate = new Date().toISOString();
+            localStorage.setItem(startDateKey, startDate);
+        }
+
+        const startDateTime = new Date(startDate).getTime();
+        const today = new Date();
+        const todayTime = today.getTime();
+        const daysPassed = Math.floor((todayTime - startDateTime) / (1000 * 60 * 60 * 24));
+        const unlockedDays = Math.min(daysPassed + 31, daysCount);
+
+        for (let i = 1; i <= daysCount; i++) {
+            const day = document.createElement('div');
+            day.classList.add('day');
+            day.innerText = i;
+
+            if (i <= unlockedDays) {
+                day.classList.add('unlocked');
+                day.addEventListener('click', () => {
+                    const dayContent = content[i];
+                    modalContent.innerHTML = '';
+
+                    if (dayContent) {
+                        if (dayContent.text) modalContent.innerHTML += `<p><i>${dayContent.text}</i></p>`;
+                        if (dayContent.image) modalContent.innerHTML += `<img src="${dayContent.image}" alt="Day ${i} image">`;
+                        if (dayContent.song) modalContent.innerHTML += `<a style="color: pink; text-decoration: none;" href="${dayContent.song}" target="_blank">Άκουσε το τραγούδι</a>`;
+                        if (dayContent.video) {
+                            modalContent.innerHTML += `
+                                 <video width="560" height="315" controls>
+                                <source src="${dayContent.video}" type="video/mp4">
+                                Το πρόγραμμα περιήγησης σας δεν υποστηρίζει βίντεο.
+                                </video>`;
+                        }
+                    } else {
+                        modalContent.innerHTML = `<p>Δεν υπάρχει περιεχόμενο για αυτή την ημέρα.</p>`;
+                    }
+
+                    modal.classList.add('open');
+                    overlay.classList.add('open');
+                });
+            } else {
+                day.classList.add('locked');
+                day.addEventListener('click', () => {
+                    alert('Μην βιάζεσαι! Πρέπει να κάνεις υπομονή να έρθει η επόμενη μερα !!');
+                });
+            }
+
+            calendar.appendChild(day);
+        }
+
+        overlay.addEventListener('click', () => {
+            modal.classList.remove('open');
+            overlay.classList.remove('open');
+        });
+
+        closeModal.addEventListener('click', () => {
+            modal.classList.remove('open');
+            overlay.classList.remove('open');
+        });
+    </script>
+</body>
+
+</html>
