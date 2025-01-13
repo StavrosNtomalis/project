@@ -191,10 +191,17 @@
         localStorage.setItem(startDateKey, startDate);
     }
 
-const startDateObj = new Date(startDate.split('T')[0]);
-    const todayObj = new Date(new Date().toISOString().split('T')[0]);
+// const startDateObj = new Date(startDate.split('T')[0]);
+//     const todayObj = new Date(new Date().toISOString().split('T')[0]);
+//     const daysPassed = Math.floor((todayObj - startDateObj) / (1000 * 60 * 60 * 24));
+//     const unlockedDays = Math.min(daysPassed + 1, daysCount);
+
+
+        const startDateObj = new Date(new Date(startDate).toDateString()); // Μόνο ημερομηνία
+    const todayObj = new Date(new Date().toDateString()); // Μόνο ημερομηνία
     const daysPassed = Math.floor((todayObj - startDateObj) / (1000 * 60 * 60 * 24));
-    const unlockedDays = Math.min(daysPassed + 1, daysCount);
+    const unlockedDays = Math.min(daysPassed + 1, daysCount); // +1 για την πρώτη ημέρα
+
 
 
 
